@@ -1,62 +1,30 @@
 const express = require('express')
 const app = express()
+const dotenv = require('dotenv').config()
 const cors = require('cors')
 const mongoose = require('mongoose')
 const User = require('./models/user.model')
 const jwt = require('jsonwebtoken')
-// const bodyParser = require('body-parser')
-// const multer = require('multer')
-// const fs = require('fs')
-// const path = require('path')
-// const fileupload = require('express-fileupload')
-
-
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) =>{
-//         cb(null, 'uploads')
-//     },
-//     filename: (req, file, cb) =>{
-//         cb( null, file.fieldname+'-'+Date.now())
-//     }
-// }) 
-// const upload = multer({storage: storage})
+const port = process.env.PORT || 1337
 
 app.use(cors())
 app.use(express.json())
-// app.use(fileupload)
-// app.use(bodyParser.urlencoded({extended: false}))
-// app.use(bodyParser.json())
-// app.set("view engine", "ejs")
 
 mongoose.connect('mongodb+srv://ninegap:ninegaptask@ninegapcluster0.i2b1o58.mongodb.net/?retryWrites=true&w=majority')
-// upload.single('image'),
+
 app.post('/api/register', async (req, res)=>{
-    // const file = req.body.img
     try{
         await User.create({
             fname: req.body.fname,
             lname: req.body.lname,
             email: req.body.email,
             passwd: req.body.passwd,
-            // img: {
-            //     // filename: req.body.img,
-            //     // filepath: `/uploads/${file}`,
-            //     data: fs.readFileSync(path.join(__dirname+'/uploads/'+req.body.img)),
-            //     contentType: 'image/png',
-            // },
         })
         res.json({status: 'ok'})
     }catch(err){
         res.json({status: 'error', error: 'Duplicate email'})
         console.log(err)
     }
-
-    // file.mv(`${__dirname}/server/uploads/${file}`,err=>{
-    //     if(err){
-    //         console.log("file not in uploads")
-    //     }
-    // })
-    
 })
 
 app.post('/api/login',async (req, res)=>{
@@ -91,10 +59,14 @@ app.get('/api/dashboard',async (req, res)=>{
     
 })
 
+if(process.env.NODE_ENV === 'production'){
+    app.use(express.static(path.join(__dirname,'../vite-client/dist')))
 
+    app.get('*',(req,res)=>res.sendFile(path.resolve(__dirname,'../','vite-client','dist','index.html')))
+}else{
+    app.get('/',(req,res)=>res.send("set to production"))
+}
 
-
-
-app.listen(1337,() =>{
-    console.log("running on port 1337")
+app.listen(port,() =>{
+    console.log(`running on port ${port}`)
 })
